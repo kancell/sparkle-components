@@ -27,9 +27,9 @@
     ]
   },
   "dependencies": {
+    "@react-spring/web": "^9.4.4",
     "dumi-theme-mobile": "^1.1.22",
-    "react": "^16.12.0 || ^17.0.0",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat"
+    "react": "^16.12.0 || ^17.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss7-compat": "^2.2.17",

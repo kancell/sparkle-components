@@ -1,6 +1,7 @@
-import React, { useRef, CSSProperties, useMemo } from 'react';
-import { memo, useState, useEffect } from 'react';
+import React, { useRef, CSSProperties, useMemo, memo, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { useSpring, animated, config } from '@react-spring/web';
+
 import { addUnit, isDef } from '../utils';
 import './../style.css';
 
@@ -58,11 +59,29 @@ type ImageProps = {
    * @description       图标大小
    */
   iconSize?: number;
+  /**
+   * @description       样式
+   */
   style?: CSSProperties;
+  /**
+   * @description       宽度，支持数字与字符串（如24px、16vw等）
+   */
   width?: number | string;
+  /**
+   * @description       高度，支持数字与字符串（如24px、16vh等）
+   */
   height?: number | string;
+  /**
+   * @description 图片加载成功事件
+   */
   onLoad?: () => void;
+  /**
+   * @description 图片加载失败事件
+   */
   onError?: () => void;
+  /**
+   * @description 图片点击事件
+   */
   onClick?: () => void;
 };
 
@@ -106,8 +125,6 @@ const Image: React.FC<ImageProps> = ({
   }, [style]);
 
   const imageRef = useRef(null);
-  const [visible, setVisible] = useState<boolean>(false);
-
   const [state, setState] = useState<{
     loading: boolean;
     error: boolean;
@@ -213,22 +230,33 @@ const Image: React.FC<ImageProps> = ({
     }
   };
 
+  const [visible, setVisible] = useState<boolean>(false);
+
+  const styles = useSpring({
+    loop: false,
+    from: { opacity: visible ? 0 : 1 },
+    to: { opacity: visible ? 1 : 0 },
+    config: config.gentle,
+  });
+
   useEffect(() => {
-    const RenderOutline = document.createElement('div');
     if (visible && preview) {
+      const RenderOutline = document.createElement('div');
+      document.body.appendChild(RenderOutline);
       ReactDOM.render(
-        <div
-          onClick={() => {
-            setVisible(!visible);
-            document.body.removeChild(RenderOutline);
-          }}
-          className="z-50 top-0 left-0 fixed w-screen h-screen flex items-center justify-center bg-opacity-90 bg-gray-800"
-        >
-          <img src={src} className="w-auto h-auto" />
-        </div>,
+        <animated.div style={styles}>
+          <div
+            onClick={() => {
+              setVisible(!visible);
+              document.body.removeChild(RenderOutline);
+            }}
+            className="z-50 top-0 left-0 fixed w-screen h-screen flex items-center justify-center bg-opacity-90 bg-gray-800"
+          >
+            <img src={src} className="w-auto h-auto" />
+          </div>
+        </animated.div>,
         RenderOutline,
       );
-      document.body.appendChild(RenderOutline);
     }
   }, [visible]);
 
