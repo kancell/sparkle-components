@@ -24,14 +24,23 @@ import { Image } from 'sparkle';
 
 ### 基础用法
 
-提供点击图片全屏预览，如需阻止预览，请将组件的 preview 属性设为 false
+提供点击图片全屏预览，预览图片会于屏幕居中显示  
+如图片高度高于屏幕，则图片从屏幕顶端开始显示，并提供 Y 轴滚动。  
+如需阻止预览，请将组件的 preview 属性设为 false。
 
 ```tsx
 import React from 'react';
 import { Image } from 'sparkle';
 
 export default () => (
-  <Image src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg" />
+  <>
+    <Image src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg" />
+    <Image
+      className="w-16 h-16 mx-auto mt-1"
+      fit="cover"
+      src="https://img.zcool.cn/community/0144e25e5a7978a80120a8951d4249.jpg@0o.jpg"
+    />
+  </>
 );
 ```
 
@@ -61,7 +70,6 @@ const errElement = <div>error！</div>;
 const imgElement = () => (
   <>
     <Image src="https://error.jpg" errorIcon={errImage} />
-
     <Image src="https://error.jpg" errorIcon={errElement} />
   </>
 );
@@ -85,7 +93,7 @@ const imgElement = () => (
     />
     <Image
       className="w-12 h-12 mx-auto"
-      src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg"
+      src="https://img.zcool.cn/community/0144e25e5a7978a80120a8951d4249.jpg@0o.jpg"
       fit="cover"
     />
     <Image

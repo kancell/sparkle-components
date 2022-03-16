@@ -1,6 +1,14 @@
-import React, { useRef, CSSProperties, useMemo, memo, useState, useEffect } from 'react';
+import React, {
+  useRef,
+  CSSProperties,
+  useMemo,
+  memo,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
 import ReactDOM from 'react-dom';
-import { useSpring, animated, config } from '@react-spring/web';
+import { useTransition, animated, config, SpringValue } from '@react-spring/web';
 
 import { addUnit, isDef } from '../utils';
 import './../style.css';
@@ -125,6 +133,7 @@ const Image: React.FC<ImageProps> = ({
   }, [style]);
 
   const imageRef = useRef(null);
+
   const [state, setState] = useState<{
     loading: boolean;
     error: boolean;
@@ -232,38 +241,72 @@ const Image: React.FC<ImageProps> = ({
 
   const [visible, setVisible] = useState<boolean>(false);
 
-  const styles = useSpring({
-    loop: false,
-    from: { opacity: visible ? 0 : 1 },
-    to: { opacity: visible ? 1 : 0 },
+  const transitions = useTransition(visible, {
+    from: { opacity: 0 },
+    enter: { opacity: 1 },
+    leave: { opacity: 0 },
     config: config.gentle,
   });
 
-  useEffect(() => {
-    if (visible && preview) {
-      const RenderOutline = document.createElement('div');
-      document.body.appendChild(RenderOutline);
-      ReactDOM.render(
-        <animated.div style={styles}>
-          <div
-            onClick={() => {
-              setVisible(!visible);
-              document.body.removeChild(RenderOutline);
-            }}
-            className="z-50 top-0 left-0 fixed w-screen h-screen flex items-center justify-center bg-opacity-90 bg-gray-800"
-          >
-            <img src={src} className="w-auto h-auto" />
-          </div>
-        </animated.div>,
-        RenderOutline,
-      );
+  const previewRef = useCallback((node) => {
+    if (node && node.querySelector('img')) {
+      if (
+        node.querySelector('img').getBoundingClientRect().height <
+        document.documentElement.clientHeight
+      ) {
+        node.classList.add('flex', 'items-center', 'justify-center');
+      }
     }
-  }, [visible]);
+  }, []);
+
+  const previewRender = () => {
+    const PreviewImage = (
+      <div
+        onClick={() => {
+          setVisible(!visible);
+        }}
+        className="z-50 top-0 left-0 fixed w-screen h-screen bg-black"
+      >
+        <div ref={previewRef} className="w-screen h-screen overflow-y-auto">
+          <img src={src} className="w-full" />
+        </div>
+      </div>
+    );
+
+    return transitions(
+      (styles: { opacity: SpringValue }, item: boolean) =>
+        item && (
+          <div>
+            <animated.div style={styles}>{PreviewImage}</animated.div>
+          </div>
+        ),
+    );
+    /*
+   * 无spring动画实现
+    const PreviewImage = visible ?
+    <div
+      onClick={() => {
+        setVisible(!visible)
+      }}
+      className="z-50 top-0 left-0 fixed w-screen h-screen bg-black"
+    >
+      <div ref={previewRef} className="w-screen h-screen overflow-y-auto">
+        <img src={src} className="w-full" />
+      </div>
+    </div>
+    : null;
+
+    return ReactDOM.createPortal(PreviewImage, document.body) 
+   */
+  };
+
+  useEffect(() => {}, [visible]);
 
   return (
     <>
       {state.loading && loadingElementFunc()}
       {ImageElementFunc()}
+      {previewRender()}
     </>
   );
 };
