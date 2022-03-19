@@ -33,14 +33,15 @@ import React from 'react';
 import { Image } from 'sparkle';
 
 export default () => (
-  <>
+  <div>
     <Image src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg" />
+    <p>长图片</p>
     <Image
       className="w-16 h-16 mx-auto mt-1"
       fit="cover"
       src="https://img.zcool.cn/community/0144e25e5a7978a80120a8951d4249.jpg@0o.jpg"
     />
-  </>
+  </div>
 );
 ```
 
@@ -86,23 +87,23 @@ import React from 'react';
 import { Image } from 'sparkle';
 
 const imgElement = () => (
-  <div className="grid grid-cols-2">
+  <div className="grid grid-cols-1 p-1">
     <Image
-      className="w-12 h-12 mx-auto"
+      className="mx-auto h-64"
       src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg"
     />
     <Image
-      className="w-12 h-12 mx-auto"
+      className="mx-auto h-64"
       src="https://img.zcool.cn/community/0144e25e5a7978a80120a8951d4249.jpg@0o.jpg"
-      fit="cover"
+      fit="fill"
     />
     <Image
-      className="w-12 h-12 mx-auto"
+      className="mx-auto h-64"
       src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg"
       fit="scale-down"
     />
     <Image
-      className="w-12 h-12 mx-auto"
+      className="mx-auto h-64"
       src="https://cdn.pixabay.com/photo/2014/09/07/21/34/child-438373_960_720.jpg"
       fit="contain"
     />

@@ -1,14 +1,7 @@
-import React, {
-  useRef,
-  CSSProperties,
-  useMemo,
-  memo,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react';
+import React, { useRef, CSSProperties, useMemo, memo, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTransition, animated, config, SpringValue } from '@react-spring/web';
+import { Loading, Error } from '@icon-park/react';
 
 import { addUnit, isDef } from '../utils';
 import './../style.css';
@@ -93,14 +86,6 @@ type ImageProps = {
   onClick?: () => void;
 };
 
-const extraCalsses = (props: ImageProps) => {
-  let classes = '';
-  if (props.fit) classes += ` object-${props.fit}`;
-  if (props.position) classes += ` object-${props.position}`;
-  if (props.className) classes += ` ${props.className}`;
-  return classes;
-};
-
 const Image: React.FC<ImageProps> = ({
   src,
   className,
@@ -120,7 +105,7 @@ const Image: React.FC<ImageProps> = ({
   onError,
   onClick,
 }) => {
-  const imageStyle = useMemo(() => {
+  const wrapStyle = useMemo(() => {
     const internalStyle: CSSProperties = { ...style };
     if (isDef(width)) {
       internalStyle.width = addUnit(width);
@@ -132,6 +117,7 @@ const Image: React.FC<ImageProps> = ({
     return internalStyle;
   }, [style]);
 
+  const imageClasses = `w-full h-full object-${fit} object-${position}`;
   const imageRef = useRef(null);
 
   const [state, setState] = useState<{
@@ -158,20 +144,15 @@ const Image: React.FC<ImageProps> = ({
     preview && setVisible(true);
   };
 
-  const ImageElementFunc = () => {
-    if (state.error || !src) return errorElementFunc();
-    /*     const attrs = {
-      style: {
-        objectFit: fit,
-      },
-    }; */
+  const ImageRender = () => {
+    if (state.error || !src) return null;
+
     return (
       <img
-        className={extraCalsses({ fit, position, className })}
         src={src}
         ref={imageRef}
         alt={alt}
-        style={imageStyle}
+        className={imageClasses}
         onLoad={imageOnLoad}
         onError={imageOnError}
         onClick={imageOnClick}
@@ -179,64 +160,38 @@ const Image: React.FC<ImageProps> = ({
     );
   };
 
-  const errorElementFunc = () => {
-    if (!showError) return null;
+  const errorRender = () => {
     if (!errorIcon) {
-      return (
-        <div className="flex justify-center items-center bg-gray-400">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </div>
-      );
+      return <Error style={{ fontSize: iconSize }} />;
     } else {
       return typeof errorIcon === 'string' ? (
-        <div>
-          <img src={errorIcon} alt={alt} />
-        </div>
+        <img src={errorIcon} alt={alt} className={imageClasses} />
       ) : (
         errorIcon
       );
     }
   };
 
-  const loadingElementFunc = () => {
-    if (!showLoading) return null;
+  const loadingRender = () => {
     if (!loadingIcon) {
-      return (
-        <div className="flex justify-center items-center bg-white">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"
-            />
-          </svg>
-        </div>
-      );
+      return <Loading style={{ fontSize: iconSize }} />;
     } else {
       return typeof loadingIcon === 'string' ? (
-        <div>
-          <img src={loadingIcon} alt={alt} />
-        </div>
+        <img src={loadingIcon} alt={alt} className={imageClasses} />
       ) : (
         loadingIcon
       );
     }
+  };
+
+  const placeholderRender = () => {
+    if (state.loading && showLoading) {
+      return loadingRender();
+    }
+    if (state.error && showError) {
+      return errorRender();
+    }
+    return null;
   };
 
   const [visible, setVisible] = useState<boolean>(false);
@@ -263,7 +218,7 @@ const Image: React.FC<ImageProps> = ({
     const PreviewImage = (
       <div
         onClick={() => {
-          setVisible(!visible);
+          setVisible(false);
         }}
         className="z-50 top-0 left-0 fixed w-screen h-screen bg-black"
       >
@@ -273,41 +228,21 @@ const Image: React.FC<ImageProps> = ({
       </div>
     );
 
-    return transitions(
-      (styles: { opacity: SpringValue }, item: boolean) =>
-        item && (
-          <div>
-            <animated.div style={styles}>{PreviewImage}</animated.div>
-          </div>
-        ),
+    return ReactDOM.createPortal(
+      transitions(
+        (styles: { opacity: SpringValue }, item: boolean) =>
+          item && <animated.div style={styles}>{PreviewImage}</animated.div>,
+      ),
+      document.body,
     );
-    /*
-   * 无spring动画实现
-    const PreviewImage = visible ?
-    <div
-      onClick={() => {
-        setVisible(!visible)
-      }}
-      className="z-50 top-0 left-0 fixed w-screen h-screen bg-black"
-    >
-      <div ref={previewRef} className="w-screen h-screen overflow-y-auto">
-        <img src={src} className="w-full" />
-      </div>
-    </div>
-    : null;
-
-    return ReactDOM.createPortal(PreviewImage, document.body) 
-   */
   };
 
-  useEffect(() => {}, [visible]);
-
   return (
-    <>
-      {state.loading && loadingElementFunc()}
-      {ImageElementFunc()}
+    <div style={wrapStyle} className={`${className ?? ''}`}>
+      {ImageRender()}
+      {placeholderRender()}
       {previewRender()}
-    </>
+    </div>
   );
 };
 
